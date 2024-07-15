@@ -3,6 +3,11 @@ const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken")
 
 const userSchema = new mongoose.Schema({
+    userId:{
+        type:String,
+        required:true,
+        trim:true,
+    },
     name:{
         type:String,
         required:true,
@@ -32,6 +37,9 @@ const userSchema = new mongoose.Schema({
     isVerified:{
         type:Boolean,
         default:false
+    },
+    otp:{
+        type:Number
     }
     },{timestamps:true}
 );
