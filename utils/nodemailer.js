@@ -1,8 +1,7 @@
 import nodemailer, { Transporter } from "nodemailer";
 
-const nodemailer = require("nodemailer")
-const {Transporter} = require("nodemailer")
-
+const nodemailer = require("nodemailer");
+const { Transporter } = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST || "smtp.gmail.com",
@@ -14,4 +13,4 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-module.exports  = {transporter}
+module.exports = { transporter };
