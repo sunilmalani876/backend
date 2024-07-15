@@ -1,3 +1,4 @@
+
 const { fieldValidator } = require("../../helper/fieldvalidator.helper");
 const User = require("../../models/user.model");
 const crypto = require("crypto");
@@ -73,3 +74,4 @@ const userRegister = async (req, res) => {
 };
 
 module.exports = { userRegister };
+
