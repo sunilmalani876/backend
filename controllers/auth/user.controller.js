@@ -197,4 +197,31 @@ const userLogin = async (req, res) => {
   }
 };
 
-module.exports = { userRegister, verifyAccount, userLogin };
+const getCurrentUser = async (req, res) => {
+  try {
+    if (!req.user || !req.user?._id)
+      throw new ApiError(401, "unauthorized user");
+
+    req.user._id = null;
+    req.user.upadtedAt = null;
+
+    return res
+      .status(200)
+      .send(
+        new ApiResponse(200, req.user, "current user fetched successfully")
+      );
+  } catch (error) {
+    console.error("error occured :", error?.message);
+
+    return res
+      .status(error?.statusCode || 500)
+      .send(
+        new ApiError(
+          error?.statusCode || 500,
+          error?.message || "internal server error"
+        )
+      );
+  }
+};
+
+module.exports = { userRegister, verifyAccount, userLogin, getCurrentUser };
