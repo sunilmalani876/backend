@@ -8,11 +8,9 @@ const { otpGenerator } = require("../../utils/otpGenerator");
 
 const userRegister = async (req, res) => {
   try {
-    if (!req.user || !req.user?._id)
-      throw new ApiError(401, "unauthorized user");
-
     const validFields = ["name", "email", "password"];
     const requestedFields = req.body;
+    console.log(requestedFields);
 
     const { invalidFields, missingFields } = fieldValidator(
       validFields,
@@ -47,7 +45,13 @@ const userRegister = async (req, res) => {
       subject: "Account Verification OTP",
       text: `Name: ${newUser.name}\nEmail: ${newUser.email}\nMessage: Your OTP ${otp}`,
     };
-    await transporter.send(mailOptions);
+
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log("Email sent successfully");
+    } catch (error) {
+      console.error("Error occurred:", error?.message);
+    }
 
     return res
       .status(201)
@@ -74,9 +78,6 @@ const userRegister = async (req, res) => {
 
 const verifyAccount = async (req, res) => {
   try {
-    if (!req.user || !req.user?._id)
-      throw new ApiError(401, "unauthorized user");
-
     const validFields = ["name", "email", "otp"];
     const requestedFields = req.body;
 
@@ -136,9 +137,6 @@ const verifyAccount = async (req, res) => {
 
 const userLogin = async (req, res) => {
   try {
-    if (!req.user || !req.user?._id)
-      throw new ApiError(401, "unauthorized user");
-
     const validFields = ["name", "email", "password"];
     const requestedFields = req.body;
 
@@ -158,12 +156,18 @@ const userLogin = async (req, res) => {
     const user = await User.findOne({
       name: requestedFields.name,
       email: requestedFields.email,
-    }).select("-password -_id -__v -updatedAt");
+    }).select(" -_id -__v -updatedAt");
 
     if (!user)
       throw new ApiError(
         404,
         "user with email and username not found in the system"
+      );
+
+    if (!user.isVerified || !user.isActive)
+      throw new ApiError(
+        403,
+        "user with eamil and password is not verified or inactive, please verify or reactivate your account"
       );
 
     const isPasswordValid = await user.isPasswordCorrect(
@@ -182,7 +186,13 @@ const userLogin = async (req, res) => {
     return res
       .cookie("accessToken", accessToken, options)
       .status(200)
-      .send(new ApiResponse(200, user, "user logged in successfully"));
+      .send(
+        new ApiResponse(
+          200,
+          { name: user.name, email: user.email, role: user.role },
+          "user logged in successfully"
+        )
+      );
   } catch (error) {
     console.error("error occured :", error?.message);
 
