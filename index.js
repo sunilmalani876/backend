@@ -1,26 +1,29 @@
 const { urlencoded } = require("body-parser");
-const cors = require("cors")
-const dotenv = require("dotenv")
+const cors = require("cors");
+const dotenv = require("dotenv");
 const express = require("express");
 const { dbConnect } = require("./db/dbConnect");
+const authRouter = require("./routes/auth/user.routes");
+
 const app = express();
 
-dotenv.config({path:"./secret.env"})
-app.use(cors({}))
-app.use(urlencoded({extended:true}))
+dotenv.config({ path: "./secret.env" });
+app.use(cors({}));
+app.use(urlencoded({ extended: true }));
 
-dbConnect()
+dbConnect();
 
-app.get("/",(req,res)=>{
-    res.status(200).send({message:"HOME PAGE", statusCode:200})
-})
+app.get("/", (req, res) => {
+  res.status(200).send({ message: "HOME PAGE", statusCode: 200 });
+});
 
-// routes will come here  
-
-
-
+// routes will come here
+app.use("/api/v1", authRouter.router);
 
 // routes will end here
 
-
-app.listen(process.env.PORT,()=>{console.log(`server running on port : ${process.env.PORT?process.env.PORT:""}`);})
+app.listen(process.env.PORT, () => {
+  console.log(
+    `server running on port : ${process.env.PORT ? process.env.PORT : ""}`
+  );
+});
