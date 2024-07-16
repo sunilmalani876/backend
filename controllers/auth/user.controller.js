@@ -1,4 +1,3 @@
-
 const { fieldValidator } = require("../../helper/fieldvalidator.helper");
 const User = require("../../models/user.model");
 const crypto = require("crypto");
@@ -73,5 +72,129 @@ const userRegister = async (req, res) => {
   }
 };
 
-module.exports = { userRegister };
+const verifyAccount = async (req, res) => {
+  try {
+    if (!req.user || !req.user?._id)
+      throw new ApiError(401, "unauthorized user");
 
+    const validFields = ["name", "email", "otp"];
+    const requestedFields = req.body;
+
+    const { invalidFields, missingFields } = fieldValidator(
+      validFields,
+      requestedFields
+    );
+
+    if (invalidFields.length || missingFields.length)
+      throw new ApiError(
+        400,
+        `${invalidFields.length ? invalidFields : ""} are invalid, ${
+          missingFields ? missingFields : ""
+        } are missing`
+      );
+
+    const user = await User.findOne({
+      name: requestedFields.name,
+      email: requestedFields.email,
+    });
+
+    if (!user)
+      throw new ApiError(
+        404,
+        "user with email and username not found in the system"
+      );
+
+    if (user.otp != requestedFields.otp)
+      throw new ApiError(400, "invalid/wrong otp");
+
+    user.isActive = true;
+    user.isVerified = true;
+    await user.save();
+
+    await User.findByIdAndUpdate(user?._id, {
+      $unset: {
+        otp: 1,
+      },
+    });
+
+    return res
+      .status(200)
+      .send(new ApiResponse(200, {}, "user verified successfully"));
+  } catch (error) {
+    console.error("error occured :", error?.message);
+
+    return res
+      .status(error?.statusCode || 500)
+      .send(
+        new ApiError(
+          error?.statusCode || 500,
+          error?.message || "internal server error"
+        )
+      );
+  }
+};
+
+const userLogin = async (req, res) => {
+  try {
+    if (!req.user || !req.user?._id)
+      throw new ApiError(401, "unauthorized user");
+
+    const validFields = ["name", "email", "password"];
+    const requestedFields = req.body;
+
+    const { invalidFields, missingFields } = fieldValidator(
+      validFields,
+      requestedFields
+    );
+
+    if (invalidFields.length || missingFields.length)
+      throw new ApiError(
+        400,
+        `${invalidFields.length ? invalidFields : ""} are invalid, ${
+          missingFields ? missingFields : ""
+        } are missing`
+      );
+
+    const user = await User.findOne({
+      name: requestedFields.name,
+      email: requestedFields.email,
+    }).select("-password -_id -__v -updatedAt");
+
+    if (!user)
+      throw new ApiError(
+        404,
+        "user with email and username not found in the system"
+      );
+
+    const isPasswordValid = await user.isPasswordCorrect(
+      requestedFields.password
+    );
+
+    if (!isPasswordValid) throw new ApiError(400, "invalid/wrong password");
+
+    const options = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV == "production",
+    };
+
+    const accessToken = await user.generateAccessToken();
+
+    return res
+      .cookie("accessToken", accessToken, options)
+      .status(200)
+      .send(new ApiResponse(200, user, "user logged in successfully"));
+  } catch (error) {
+    console.error("error occured :", error?.message);
+
+    return res
+      .status(error?.statusCode || 500)
+      .send(
+        new ApiError(
+          error?.statusCode || 500,
+          error?.message || "internal server error"
+        )
+      );
+  }
+};
+
+module.exports = { userRegister, verifyAccount, userLogin };

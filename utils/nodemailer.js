@@ -1,5 +1,3 @@
-import nodemailer, { Transporter } from "nodemailer";
-
 const nodemailer = require("nodemailer");
 const { Transporter } = require("nodemailer");
 
