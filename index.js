@@ -4,11 +4,13 @@ const dotenv = require("dotenv");
 const express = require("express");
 const { dbConnect } = require("./db/dbConnect");
 const authRouter = require("./routes/auth/user.routes");
+const json = require("body-parser/lib/types/json");
 
 const app = express();
 
 dotenv.config({ path: "./secret.env" });
 app.use(cors({}));
+app.use(json());
 app.use(urlencoded({ extended: true }));
 
 dbConnect();
@@ -18,7 +20,7 @@ app.get("/", (req, res) => {
 });
 
 // routes will come here
-app.use("/api/v1", authRouter.router);
+app.use("/api/v1/", authRouter.router);
 
 // routes will end here
 

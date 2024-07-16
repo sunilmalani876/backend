@@ -4,16 +4,16 @@ function fieldValidator(validFields, data) {
 
   validFields.forEach((field) => {
     // Check for missing field
-    if (typeof data[field] === "undefined") {
+    if (data[field] === "undefined") {
       missingFields.push(field);
     } else {
       // Specific validation logic for email
-      if (
-        field === "email" &&
-        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data[field])
-      ) {
-        invalidFields.push({ field: "email", message: "Invalid email format" });
-      }
+      // if (
+      //   field === "email" &&
+      //   !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data[field])
+      // ) {
+      //   invalidFields.push({ field: "email", message: "Invalid email format" });
+      // }
 
       // Specific validation logic for password
       if (
